@@ -1,13 +1,38 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import Layout from "@/components/layout/Layout";
+import HeroSlider from "@/components/home/HeroSlider";
+import FeaturedCategories from "@/components/home/FeaturedCategories";
+import PromoBanners from "@/components/home/PromoBanners";
+import PopularProducts from "@/components/home/PopularProducts";
+import ProductLists from "@/components/home/ProductLists";
+import Newsletter from "@/components/shared/Newsletter";
+import TrustBadges from "@/components/shared/TrustBadges";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <Layout>
+      {/* Hero Slider */}
+      <section className="container mx-auto py-6">
+        <HeroSlider />
+      </section>
+
+      {/* Featured Categories */}
+      <FeaturedCategories />
+
+      {/* Promo Banners */}
+      <PromoBanners />
+
+      {/* Popular Products */}
+      <PopularProducts />
+
+      {/* Product Lists (Top Selling, Trending, Recently Added, Top Rated) */}
+      <ProductLists />
+
+      {/* Newsletter */}
+      <Newsletter />
+
+      {/* Trust Badges */}
+      <TrustBadges />
+    </Layout>
   );
 };
 
