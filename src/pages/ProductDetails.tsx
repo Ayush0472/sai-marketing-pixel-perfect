@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import ProductCard from "@/components/shared/ProductCard";
@@ -9,64 +9,45 @@ import SectionTitle from "@/components/shared/SectionTitle";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, ShoppingCart, Minus, Plus, Star } from "lucide-react";
-
-import khatuShyamStatue from "@/assets/products/khatu-shyam-statue.jpg";
-import saiBabaDress from "@/assets/products/sai-baba-dress.jpg";
-import ramMandirPoshak from "@/assets/products/ram-mandir-poshak.jpg";
-import guruNanakDashboard from "@/assets/products/guru-nanak-dashboard.jpg";
-import saiBabaDashboard from "@/assets/products/sai-baba-dashboard.jpg";
-import saiBabaPagdi from "@/assets/products/sai-baba-pagdi.jpg";
-import ishauraVentClip from "@/assets/products/ishaura-vent-clip.jpg";
-import bhageshwarDashboard from "@/assets/products/bhageshwar-dashboard.jpg";
-import kesarChandan from "@/assets/products/kesar-chandan.jpg";
-import mataDress from "@/assets/products/mata-dress.jpg";
-import ishauraFreshener from "@/assets/products/ishaura-freshener.jpg";
-import khatuShyamBabaStatue from "@/assets/products/khatu-shyam-statue-5inch.jpg";
+import { 
+  getProductById, 
+  getRelatedProducts, 
+  getTopSellingProducts, 
+  getCategories,
+  Product 
+} from "@/data/products";
 
 const ProductDetails = () => {
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState("5in");
-  const [mainImage, setMainImage] = useState(khatuShyamStatue);
+  const [selectedSize, setSelectedSize] = useState("");
+  const [mainImage, setMainImage] = useState("");
 
-  const thumbnails = [khatuShyamStatue, saiBabaDress, ramMandirPoshak];
+  const product = id ? getProductById(id) : undefined;
+  const relatedProducts = id ? getRelatedProducts(id, 4) : [];
+  const topSelling = getTopSellingProducts(3);
+  const categories = getCategories();
 
-  const product = {
-    name: "5 Inch Khatu Shyam Idol God Statue",
-    price: 170.0,
-    rating: 4.5,
-    reviews: 12,
-    sku: "SSM-001",
-    category: "God Statue",
-    description: "Khatu Shyam Ji is a revered deity in Hinduism, believed to be an incarnation of Barbarika, the grandson of Bhima from the Mahabharata. His idol or statue is typically designed to reflect his divine grace and aura.",
-    material: "Polyresin",
-    finish: "Color Coated",
-    sizes: ["4in", "5in", "6in"],
-    stateName: "Khatu Shyam Baba",
-    suitableFor: "Home",
-    MOQ: "10 Piece",
-  };
+  // Initialize state when product changes
+  useEffect(() => {
+    if (product) {
+      setMainImage(product.images[0]);
+      setSelectedSize(product.sizes?.[0] || "");
+      setQuantity(1);
+    }
+  }, [product]);
 
-  const categories = [
-    { name: "God Statue Dress", count: 10 },
-    { name: "Car Dashboard Idol", count: 8 },
-    { name: "Pooja Items", count: 6 },
-    { name: "Candle", count: 5 },
-    { name: "Laddu Gopal Mukut", count: 4 },
-  ];
+  // Redirect to shop if product not found
+  useEffect(() => {
+    if (id && !product) {
+      navigate("/shop");
+    }
+  }, [id, product, navigate]);
 
-  const topSelling = [
-    { name: "Mata Dress", price: 60.0, unit: "Piece", image: mataDress },
-    { name: "ISHAURA ROOM FRESHENERS", price: 70.0, unit: "Piece", image: ishauraFreshener },
-    { name: "4 Inch Khatu Shyam Baba God Statue", price: 85.0, unit: "Piece", image: khatuShyamBabaStatue },
-  ];
-
-  const relatedProducts = [
-    { id: "r1", name: "Sai Baba Pagdi", price: 300.0, unit: "Piece", image: saiBabaPagdi, badge: "hot" as const },
-    { id: "r2", name: "Jai Guru Ji Chola", price: 5300.0, unit: "Piece", image: guruNanakDashboard, badge: "12%" },
-    { id: "r3", name: "Orange Kumkum Sindur", price: 155.0, unit: "Kg", image: kesarChandan },
-    { id: "r4", name: "Sai Baba Car Dashboard Idol", price: 65.0, unit: "Piece", image: saiBabaDashboard, badge: "hot" as const },
-  ];
+  if (!product) {
+    return null;
+  }
 
   return (
     <Layout>
@@ -90,7 +71,10 @@ const ProductDetails = () => {
 
       {/* Breadcrumb */}
       <div className="container mx-auto px-4">
-        <Breadcrumb items={[{ label: "Our Product", path: "/shop" }, { label: "God Statue" }]} />
+        <Breadcrumb items={[
+          { label: "Our Product", path: "/shop" }, 
+          { label: product.category }
+        ]} />
       </div>
 
       {/* Product Details */}
@@ -107,7 +91,7 @@ const ProductDetails = () => {
                 />
               </div>
               <div className="flex gap-2">
-                {thumbnails.map((thumb, index) => (
+                {product.images.map((thumb, index) => (
                   <button
                     key={index}
                     onClick={() => setMainImage(thumb)}
@@ -123,9 +107,11 @@ const ProductDetails = () => {
 
             {/* Product Info */}
             <div className="lg:col-span-5">
-              <span className="inline-block px-3 py-1 bg-primary text-white text-xs rounded mb-3">
-                Sale Off
-              </span>
+              {product.badge && (
+                <span className="inline-block px-3 py-1 bg-primary text-white text-xs rounded mb-3">
+                  {product.badge === "hot" ? "Hot" : product.badge === "new" ? "New" : `${product.badge} Off`}
+                </span>
+              )}
               
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground mb-2">
                 {product.name}
@@ -148,32 +134,34 @@ const ProductDetails = () => {
               </div>
 
               <div className="text-3xl font-bold text-primary mb-4">
-                ₹ {product.price.toFixed(0)}<span className="text-lg font-normal">/Piece</span>
+                ₹ {product.price.toFixed(0)}<span className="text-lg font-normal">/{product.unit}</span>
               </div>
 
               <p className="text-muted-foreground mb-6 leading-relaxed">
-                {product.description}
+                {product.shortDescription}
               </p>
 
-              {/* Size Selection */}
-              <div className="mb-6">
-                <span className="text-sm font-medium text-foreground mb-2 block">Size:</span>
-                <div className="flex gap-2">
-                  {product.sizes.map((size) => (
-                    <button
-                      key={size}
-                      onClick={() => setSelectedSize(size)}
-                      className={`px-4 py-2 rounded-lg border ${
-                        selectedSize === size
-                          ? "border-primary bg-primary text-white"
-                          : "border-border hover:border-primary"
-                      }`}
-                    >
-                      {size}
-                    </button>
-                  ))}
+              {/* Size Selection - Only show if product has sizes */}
+              {product.sizes && product.sizes.length > 0 && (
+                <div className="mb-6">
+                  <span className="text-sm font-medium text-foreground mb-2 block">Size:</span>
+                  <div className="flex gap-2 flex-wrap">
+                    {product.sizes.map((size) => (
+                      <button
+                        key={size}
+                        onClick={() => setSelectedSize(size)}
+                        className={`px-4 py-2 rounded-lg border ${
+                          selectedSize === size
+                            ? "border-primary bg-primary text-white"
+                            : "border-border hover:border-primary"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Quantity & Add to Cart */}
               <div className="flex items-center gap-4 mb-6">
@@ -207,24 +195,26 @@ const ProductDetails = () => {
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-muted-foreground">Material:</span>{" "}
-                  <span className="text-primary">{product.material}</span>
+                  <span className="text-primary">{product.attributes.material}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Finish:</span>{" "}
-                  <span className="text-primary">{product.finish}</span>
+                  <span className="text-primary">{product.attributes.finish}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Suitable For:</span>{" "}
                   <span className="text-primary">{product.suitableFor}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground">Statue Name:</span>{" "}
-                  <span className="text-primary">{product.stateName}</span>
+                  <span className="text-muted-foreground">Category:</span>{" "}
+                  <span className="text-primary">{product.category}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground">Size:</span>{" "}
-                  <span className="text-primary">{selectedSize}</span>
-                </div>
+                {selectedSize && (
+                  <div>
+                    <span className="text-muted-foreground">Size:</span>{" "}
+                    <span className="text-primary">{selectedSize}</span>
+                  </div>
+                )}
                 <div>
                   <span className="text-muted-foreground">MOQ:</span>{" "}
                   <span className="text-primary">{product.MOQ}</span>
@@ -238,7 +228,7 @@ const ProductDetails = () => {
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Category</h3>
                 <ul className="space-y-2">
-                  {categories.map((category) => (
+                  {categories.slice(0, 5).map((category) => (
                     <li key={category.name}>
                       <Link
                         to="/shop"
@@ -261,17 +251,22 @@ const ProductDetails = () => {
               <div className="bg-white rounded-xl p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Top Selling</h3>
                 <ul className="space-y-4">
-                  {topSelling.map((item, index) => (
-                    <li key={index} className="flex items-center gap-3">
-                      <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h4 className="text-sm font-medium text-foreground truncate">{item.name}</h4>
-                        <p className="text-primary text-sm font-semibold">
-                          ₹ {item.price.toFixed(2)}/{item.unit}
-                        </p>
-                      </div>
+                  {topSelling.map((item) => (
+                    <li key={item.id}>
+                      <Link 
+                        to={`/product/${item.id}`}
+                        className="flex items-center gap-3 hover:bg-accent rounded-lg p-1 transition-colors"
+                      >
+                        <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <img src={item.images[0]} alt={item.name} className="w-full h-full object-cover" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-foreground truncate">{item.name}</h4>
+                          <p className="text-primary text-sm font-semibold">
+                            ₹ {item.price.toFixed(2)}/{item.unit}
+                          </p>
+                        </div>
+                      </Link>
                     </li>
                   ))}
                 </ul>
@@ -288,38 +283,37 @@ const ProductDetails = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="description">Description</TabsTrigger>
               <TabsTrigger value="additional">Additional info</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews (3)</TabsTrigger>
+              <TabsTrigger value="reviews">Reviews ({product.reviews})</TabsTrigger>
             </TabsList>
 
             <TabsContent value="description" className="bg-white rounded-xl p-6">
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                Bring divine grace and spiritual serenity into your space with this beautifully crafted Khatu Shyam Baba Statue. Made from high-quality polyresin and finished with vibrant color coating, this statue reflects fine detailing and devotional elegance. Ideal for daily worship, home temples, and spiritual decor, the statue embodies calmness, faith, and reverence.
-              </p>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                Khatu Shyam Ji is a highly revered deity in Hinduism, believed to be the incarnation of Barbarika, the grandson of Bhima from the Mahabharata. Worshipped widely for blessings, devotion, and fulfillment of wishes, this statue is designed to radiate his divine aura and protective presence.
-              </p>
+              {/* Introduction Paragraphs */}
+              {product.fullDescription.intro.map((paragraph, index) => (
+                <p key={index} className="text-muted-foreground leading-relaxed mb-4">
+                  {paragraph}
+                </p>
+              ))}
 
               <h4 className="font-semibold text-foreground mt-6 mb-2">Packaging & Delivery</h4>
               <ul className="text-muted-foreground text-sm space-y-1">
-                <li>Packaging Type: Secure carton packing</li>
-                <li>Piece In One Carton: As per order requirement</li>
-                <li>Minimum Order Quantity: 10 Pieces</li>
-                <li>Handling: Carefully packed to prevent damage during transit.</li>
+                <li>Packaging Type: {product.fullDescription.packaging.type}</li>
+                <li>Piece In One Carton: {product.fullDescription.packaging.piecesPerCarton}</li>
+                <li>Minimum Order Quantity: {product.fullDescription.packaging.moq}</li>
+                <li>Handling: {product.fullDescription.packaging.handling}</li>
               </ul>
 
               <h4 className="font-semibold text-foreground mt-6 mb-2">Suggested Use</h4>
               <ul className="text-muted-foreground text-sm space-y-1">
-                <li>Ideal for daily pooja and religious rituals</li>
-                <li>Suitable for placement in home mandir, office temple, or gifting</li>
-                <li>Can be used during festivals, religious occasions, and auspicious ceremonies</li>
+                {product.fullDescription.suggestedUse.map((use, index) => (
+                  <li key={index}>{use}</li>
+                ))}
               </ul>
 
               <h4 className="font-semibold text-foreground mt-6 mb-2">Care Instructions & Warnings</h4>
               <ul className="text-muted-foreground text-sm space-y-1">
-                <li>Clean gently with a dry or soft cloth</li>
-                <li>Avoid using water or harsh chemicals</li>
-                <li>Keep away from direct sunlight for long-lasting color</li>
-                <li>Minor color or texture variations may occur due to handcrafted finishing.</li>
+                {product.fullDescription.careInstructions.map((instruction, index) => (
+                  <li key={index}>{instruction}</li>
+                ))}
               </ul>
             </TabsContent>
 
@@ -328,27 +322,41 @@ const ProductDetails = () => {
                 <tbody>
                   <tr className="border-b">
                     <td className="py-2 text-muted-foreground">Material</td>
-                    <td className="py-2 font-medium">Polyresin</td>
+                    <td className="py-2 font-medium">{product.attributes.material}</td>
                   </tr>
                   <tr className="border-b">
                     <td className="py-2 text-muted-foreground">Finish</td>
-                    <td className="py-2 font-medium">Color Coated</td>
+                    <td className="py-2 font-medium">{product.attributes.finish}</td>
+                  </tr>
+                  {product.attributes.position && (
+                    <tr className="border-b">
+                      <td className="py-2 text-muted-foreground">Position</td>
+                      <td className="py-2 font-medium">{product.attributes.position}</td>
+                    </tr>
+                  )}
+                  {product.attributes.size && (
+                    <tr className="border-b">
+                      <td className="py-2 text-muted-foreground">Size</td>
+                      <td className="py-2 font-medium">{product.attributes.size}</td>
+                    </tr>
+                  )}
+                  {product.attributes.weight && (
+                    <tr className="border-b">
+                      <td className="py-2 text-muted-foreground">Weight</td>
+                      <td className="py-2 font-medium">{product.attributes.weight}</td>
+                    </tr>
+                  )}
+                  <tr className="border-b">
+                    <td className="py-2 text-muted-foreground">Usage/Application</td>
+                    <td className="py-2 font-medium">{product.attributes.usage}</td>
                   </tr>
                   <tr className="border-b">
-                    <td className="py-2 text-muted-foreground">Position</td>
-                    <td className="py-2 font-medium">Standing</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 text-muted-foreground">Size</td>
-                    <td className="py-2 font-medium">5 Inch</td>
-                  </tr>
-                  <tr className="border-b">
-                    <td className="py-2 text-muted-foreground">Weight</td>
-                    <td className="py-2 font-medium">Approx. 100 gm</td>
+                    <td className="py-2 text-muted-foreground">SKU</td>
+                    <td className="py-2 font-medium">{product.sku}</td>
                   </tr>
                   <tr>
-                    <td className="py-2 text-muted-foreground">Usage/Application</td>
-                    <td className="py-2 font-medium">Worship, Home Temple, Spiritual Décor</td>
+                    <td className="py-2 text-muted-foreground">MOQ</td>
+                    <td className="py-2 font-medium">{product.MOQ}</td>
                   </tr>
                 </tbody>
               </table>
@@ -362,17 +370,27 @@ const ProductDetails = () => {
       </section>
 
       {/* Related Products */}
-      <section className="py-12">
-        <div className="container mx-auto px-4">
-          <SectionTitle title="Related products" />
+      {relatedProducts.length > 0 && (
+        <section className="py-12">
+          <div className="container mx-auto px-4">
+            <SectionTitle title="Related products" />
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {relatedProducts.map((product) => (
-              <ProductCard key={product.id} {...product} />
-            ))}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <ProductCard 
+                  key={relatedProduct.id} 
+                  id={relatedProduct.id}
+                  name={relatedProduct.name}
+                  price={relatedProduct.price}
+                  unit={relatedProduct.unit}
+                  image={relatedProduct.images[0]}
+                  badge={relatedProduct.badge}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Newsletter */}
       <Newsletter />

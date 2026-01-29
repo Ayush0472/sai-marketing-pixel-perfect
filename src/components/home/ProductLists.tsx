@@ -1,28 +1,16 @@
 import { Link } from "react-router-dom";
-
-import mataDress from "@/assets/products/mata-dress.jpg";
-import ishauraFreshener from "@/assets/products/ishaura-freshener.jpg";
-import khatuShyamStatue from "@/assets/products/khatu-shyam-statue-5inch.jpg";
-import chandan from "@/assets/products/chandan-powder.jpg";
-import shivParvati from "@/assets/products/shiv-parvati-dashboard.jpg";
-import jaiShriShyam from "@/assets/products/jai-shri-shyam-tilak.jpg";
-import gangaJal from "@/assets/products/ganga-jal.jpg";
-import rotoFabric from "@/assets/products/roto-fabric.jpg";
-import kumkumSindur from "@/assets/products/kumkum-sindur.jpg";
-import ishauraHanging from "@/assets/products/ishaura-air-freshener.jpg";
-import ladduGopalDress from "@/assets/products/laddu-gopal-dress-2.jpg";
-import kesarChandan from "@/assets/products/kesar-chandan.jpg";
+import { products } from "@/data/products";
 
 interface ProductListItemProps {
+  id: string;
   name: string;
   price: number;
   unit?: string;
   image: string;
-  link: string;
 }
 
-const ProductListItem = ({ name, price, unit, image, link }: ProductListItemProps) => (
-  <Link to={link} className="flex items-center gap-3 py-2 hover:bg-accent rounded-lg px-2 transition-colors group">
+const ProductListItem = ({ id, name, price, unit, image }: ProductListItemProps) => (
+  <Link to={`/product/${id}`} className="flex items-center gap-3 py-2 hover:bg-accent rounded-lg px-2 transition-colors group">
     <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted flex-shrink-0">
       <img src={image} alt={name} className="w-full h-full object-cover" />
     </div>
@@ -39,29 +27,25 @@ const ProductListItem = ({ name, price, unit, image, link }: ProductListItemProp
 );
 
 const ProductLists = () => {
-  const topSelling = [
-    { name: "Mata Dress", price: 60.0, unit: "Piece", image: mataDress },
-    { name: "ISHAURA ROOM FRESHENERS", price: 70.0, unit: "Piece", image: ishauraFreshener },
-    { name: "4 Inch Khatu Shyam Baba God Statue", price: 85.0, unit: "Piece", image: khatuShyamStatue },
-  ];
+  // Top Selling - products with "hot" badge
+  const topSelling = products
+    .filter(p => p.badge === "hot")
+    .slice(0, 3);
 
-  const trendingProducts = [
-    { name: "25 gm Kesar Ashtagandha Chandan Powder", price: 200.0, unit: "Jar", image: chandan },
-    { name: "Shiv Parvati Ji Car Dashboard Idol", price: 70.0, unit: "Piece", image: shivParvati },
-    { name: "Jai Shri Shyam Tilak", price: 17.0, unit: "Piece", image: jaiShriShyam },
-  ];
+  // Trending Products - products from Car Dashboard category
+  const trendingProducts = products
+    .filter(p => p.category === "Car Dashboard Idols")
+    .slice(0, 3);
 
-  const recentlyAdded = [
-    { name: "50ml Ganga Jal", price: 10.0, unit: "Piece", image: gangaJal },
-    { name: "White Roto Fabric", price: 12.0, unit: "Meter", image: rotoFabric },
-    { name: "Kumkum Sindur Maroon", price: 135.0, unit: "Kg", image: kumkumSindur },
-  ];
+  // Recently Added - products with "new" badge or last added
+  const recentlyAdded = products
+    .filter(p => p.badge === "new" || p.category === "Pooja Items")
+    .slice(0, 3);
 
-  const topRated = [
-    { name: "Laddu Gopal Ji Woolan Dress", price: 40.0, unit: "Set", image: ladduGopalDress },
-    { name: "250 gm Kashi Ashtagandha Chandan Tika", price: 360.0, unit: "Dozen", image: kesarChandan },
-    { name: "Ishaura Hanging Car Diffuser & Wardrobe Fresheners", price: 50.0, unit: "Piece", image: ishauraHanging },
-  ];
+  // Top Rated - highest rated products
+  const topRated = [...products]
+    .sort((a, b) => b.rating - a.rating)
+    .slice(0, 3);
 
   return (
     <section className="py-12">
@@ -71,11 +55,14 @@ const ProductLists = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Top Selling</h3>
             <div className="space-y-2">
-              {topSelling.map((product, index) => (
+              {topSelling.map((product) => (
                 <ProductListItem
-                  key={index}
-                  {...product}
-                  link={`/product/${index + 1}`}
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  unit={product.unit}
+                  image={product.images[0]}
                 />
               ))}
             </div>
@@ -85,11 +72,14 @@ const ProductLists = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Trending Products</h3>
             <div className="space-y-2">
-              {trendingProducts.map((product, index) => (
+              {trendingProducts.map((product) => (
                 <ProductListItem
-                  key={index}
-                  {...product}
-                  link={`/product/${index + 10}`}
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  unit={product.unit}
+                  image={product.images[0]}
                 />
               ))}
             </div>
@@ -99,11 +89,14 @@ const ProductLists = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Recently added</h3>
             <div className="space-y-2">
-              {recentlyAdded.map((product, index) => (
+              {recentlyAdded.map((product) => (
                 <ProductListItem
-                  key={index}
-                  {...product}
-                  link={`/product/${index + 20}`}
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  unit={product.unit}
+                  image={product.images[0]}
                 />
               ))}
             </div>
@@ -113,11 +106,14 @@ const ProductLists = () => {
           <div>
             <h3 className="text-lg font-semibold text-foreground mb-4">Top Rated</h3>
             <div className="space-y-2">
-              {topRated.map((product, index) => (
+              {topRated.map((product) => (
                 <ProductListItem
-                  key={index}
-                  {...product}
-                  link={`/product/${index + 30}`}
+                  key={product.id}
+                  id={product.id}
+                  name={product.name}
+                  price={product.price}
+                  unit={product.unit}
+                  image={product.images[0]}
                 />
               ))}
             </div>
